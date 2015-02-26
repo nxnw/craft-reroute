@@ -30,6 +30,7 @@ class RerouteController extends BaseController
 		$model->oldUrl = $data['oldUrl'];
 		$model->newUrl = $data['newUrl'];
 		$model->method = $data['method'];
+        $model->type = $data['type'];
 
 		// Did we pass validation?
 		if($model->validate()) {

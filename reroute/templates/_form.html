@@ -5,6 +5,7 @@
 {% if reroute is not defined %}
     {% if rerouteId %}
         {% set reroute = craft.reroute.getById(rerouteId) %}
+
         {% if not reroute %}{% exit 404 %}{% endif %}
     {% else %}
         {% set reroute = null %}
@@ -13,41 +14,103 @@
 
 {% set title = reroute ? 'Edit Reroute'|t : 'New Reroute'|t %}
 
+{% set singles = [] %}
+{% set channels = [] %}
+{% for section in craft.sections.getAllSections() %}
+    {% if section.type == 'single' %}
+        {% set entry = craft.entries.sectionId(section.id).first() %}
+        {% set singles = singles|merge([{ label: entry.title, value: '/' ~ (section.isHomepage() ? '' : entry.uri) }]) %}
+
+    {% else %}
+        {% set channels = channels|merge([{ optgroup: section.name }]) %}
+        {% for entry in craft.entries.sectionId(section.id) %}
+            {% set channels = channels|merge([{ label: entry.title, value: '/' ~ entry.uri }]) %}
+        {% endfor %}
+    {% endif %}
+{% endfor %}
+
+
 {% set content %}
-	<form method="post" action="">
-		<input type="hidden" name="action" value="reroute/save" />
-		<input type="hidden" name="redirect" value="reroute" />
-		<input type="hidden" name="rerouteId" value="{{ rerouteId }}" />
 
-		{{ forms.textField({
-			label: 'Old Url'|t,
-			required: true,
-			name: 'reroute[oldUrl]',
-			value: reroute ? reroute.oldUrl : null,
-			errors: reroute ? reroute.errors('oldUrl') : null,
-			instructions: 'Enter relative urls, ex: /path-to-url'
-		}) }}
+<form method="post" action="">
+    <input type="hidden" name="action" value="reroute/save" />
+    <input type="hidden" name="redirect" value="reroute" />
+    <input type="hidden" name="rerouteId" value="{{ rerouteId }}" />
 
-		{{ forms.textField({
-			label: 'New Url'|t,
-			required: true,
-			name: 'reroute[newUrl]',
-			value: reroute ? reroute.newUrl : null,
-			errors: reroute ? reroute.errors('newUrl') : null,
-		}) }}
+    {{ forms.textField({
+        label: 'Old Url'|t,
+        required: true,
+        name: 'reroute[oldUrl]',
+        value: reroute ? reroute.oldUrl : null,
+        errors: reroute ? reroute.errors('oldUrl') : null,
+        instructions: 'Enter relative urls, ex: /path-to-url'
+    }) }}
 
-		{{ forms.selectField({
-			label: 'Method'|t,
-			required: true,
-			name: 'reroute[method]',
-			options: [{ label: '301', value: '301'}, { label: '302', value: '302'}],
-			value: reroute ? reroute.method : '301',
-			errors: reroute ? reroute.errors('method') : null
-		}) }}
+    {{ forms.radioGroupField({
+        label: 'Type'|t,
+        required: true,
+        name: 'reroute[type]',
+        value: reroute ? reroute.type : '#singles',
+        options: [{ label: 'Singles', value: '#singles' }, { label: 'Channels', value: '#channels' }]
+    }) }}
 
-		<div class="buttons">
-			<input type="submit" class="btn submit" value="{{ 'Save'|t }}">
-		</div>
-	</form>
+    <div id="singles">
+        {{ forms.selectField({
+        label: 'New Url'|t,
+        required: true,
+        name: 'reroute[newUrl]',
+        value: reroute ? reroute.newUrl : null,
+        options: singles,
+        errors: reroute ? reroute.errors('newUrl') : null,
+        }) }}
+    </div>
+    <div id="channels" class="hidden">
+        {{ forms.selectField({
+        label: 'New Url'|t,
+        required: true,
+        options: channels,
+        name: 'reroute[newUrl]',
+        value: reroute ? reroute.newUrl : null,
+        errors: reroute ? reroute.errors('newUrl') : null,
+        }) }}
+    </div>
 
+    {{ forms.selectField({
+        label: 'Method'|t,
+        required: true,
+        name: 'reroute[method]',
+        options: [{ label: '301', value: '301'}, { label: '302', value: '302'}],
+        value: reroute ? reroute.method : '301',
+        errors: reroute ? reroute.errors('method') : null
+    }) }}
+
+    <div class="buttons">
+        <input type="submit" class="btn submit" value="{{ 'Save'|t }}">
+    </div>
+</form>
+
+<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+<script type="text/javascript">
+    $(function() {
+        $('input[name="reroute[type]"]').on('change', function() {
+            if($(this).is(':checked')) {
+                var ele = $(this).val(),
+                    singles = $('#singles'),
+                    channels = $('#channels');
+                switch(ele) {
+                    case '#singles':
+                        channels.addClass('hidden');
+                        $(ele).removeClass('hidden').find('select').attr('name', channels.find('select').attr('name'));
+                        channels.find('select').attr('name', '');
+                        break;
+                    case '#channels':
+                        $('#singles').addClass('hidden');
+                        $(ele).removeClass('hidden').find('select').attr('name', singles.find('select').attr('name'));
+                        singles.find('select').attr('name', '');
+
+                }
+            }
+        }).trigger('change');
+    });
+</script>
 {% endset %}
