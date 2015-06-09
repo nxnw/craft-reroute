@@ -41,27 +41,13 @@ class ReroutePlugin extends BasePlugin
 		if(craft()->request->isSiteRequest()) {
 			$url = craft()->request->getUrl();
 			$reroute = craft()->reroute->getByUrl($url);
-
 			if ($reroute) {
-
                 $query = parse_url($url);
+
                 if( isset($query['query']) ) {
                     craft()->request->redirect($reroute['newUrl'].'?'.$query['query'], true, $reroute['method']);
-
                 } else {
-
-                    if(strlen($query['path']) > 1) {
-
-                        $path = array_values(array_filter(explode('/', $query['path'])));
-                        unset($path[0]);
-
-                        craft()->request->redirect($reroute['newUrl'].'/'.implode('/', $path), true, $reroute['method']);
-
-                    } else {
-
-                        craft()->request->redirect($reroute['newUrl'], true, $reroute['method']);
-
-                    }
+                    craft()->request->redirect($reroute['newUrl'], true, $reroute['method']);
                 }
 			}
 		}
