@@ -58,7 +58,7 @@ class RerouteService extends BaseApplicationComponent
         $reroute = craft()->db->createCommand()
             ->select('id, oldUrl, newUrl, method')
             ->from('reroute')
-            ->where('oldUrl LIKE :url', array(':url' => '%' . $path . "%"))
+            ->where('oldUrl = :url', array(':url' => $path))
             ->orWhere('oldUrl = :url1', array(':url1' => parse_url($path)['path']))
             ->limit(1)
             ->queryRow();
