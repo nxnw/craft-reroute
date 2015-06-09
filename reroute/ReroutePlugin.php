@@ -39,8 +39,9 @@ class ReroutePlugin extends BasePlugin
 
 	public function init() {
 		if(craft()->request->isSiteRequest()) {
-			$url = craft()->request->getUrl();
+			$url = craft()->request->getHostInfo().craft()->request->getRequestUri();
 			$reroute = craft()->reroute->getByUrl($url);
+
 			if ($reroute) {
                 $query = parse_url($url);
 

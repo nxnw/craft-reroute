@@ -53,18 +53,16 @@ class RerouteService extends BaseApplicationComponent
 	 * @return array
 	 */
 	public function getByUrl($url) {
-        $path = parse_url($url)['path'];
-        if(strlen($path) > 1) {
-            $path = array_values(array_filter(explode('/', $path)));
-            $reroute = craft()->db->createCommand()
-                ->select('id, oldUrl, newUrl, method')
-                ->from('reroute')
-                ->where('oldUrl LIKE :url', array(':url' => '/'.$path[0] . "%"))
-                ->limit(1)
-                ->queryRow();
-        } else {
-            $reroute = false;
-        }
+        $path = $url;
+
+        $reroute = craft()->db->createCommand()
+            ->select('id, oldUrl, newUrl, method')
+            ->from('reroute')
+            ->where('oldUrl LIKE :url', array(':url' => '%' . $path . "%"))
+            ->orWhere('oldUrl LIKE :url1', array(':url1' => parse_url($path)['path'] . '%'))
+            ->limit(1)
+            ->queryRow();
+
 		return $reroute;
 	}
 
